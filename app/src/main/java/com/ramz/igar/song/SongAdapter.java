@@ -12,17 +12,19 @@ import java.util.List;
 public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder> {
     private List<Song> songs;
 
-    public static class SongViewHolder extends RecyclerView.ViewHolder {
-        public TextView title;
-        public TextView content;
-        public SongViewHolder(View v){
+    static class SongViewHolder extends RecyclerView.ViewHolder {
+        private TextView title;
+        private TextView artist;
+        private TextView duration;
+        private SongViewHolder(View v){
             super(v);
             title = v.findViewById(R.id.card_title);
-            content = v.findViewById(R.id.card_artist);
+            artist = v.findViewById(R.id.card_artist);
+            duration = v.findViewById(R.id.card_duration);
         }
     }
 
-    public SongAdapter (List<Song> songs){
+    SongAdapter (List<Song> songs){
         this.songs= songs;
     }
 
@@ -31,7 +33,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     }
 
     @Override
-    public SongAdapter.SongViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    @NonNull public SongAdapter.SongViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.song_view, parent,false);
         return new SongViewHolder(view);
     }
@@ -40,7 +42,8 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.SongViewHolder
     public void onBindViewHolder(@NonNull SongViewHolder holder, int position) {
         Song song = songs.get(position);
         holder.title.setText(song.getTitle());
-        holder.content.setText(song.getArtist());
+        holder.artist.setText(song.getArtist());
+        holder.duration.setText(song.getSongDuration());
     }
 
     @Override

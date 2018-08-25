@@ -8,6 +8,8 @@ import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -26,15 +28,12 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
+    BottomSheetBehavior bottomSheetBehavior;
     private TextView status, songTitle;
     private RecyclerView recyclerView;
     private SongAdapter songAdapter;
-    private RecyclerView.LayoutManager layoutManager;
-    private Player player = new Player();
-    private View playerView;
-    private ImageButton playButton, stopButton;
-
-    private ArrayList<Song> songs = new ArrayList<>();
+    private Player player;
+    private ImageButton playButton;
     View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -43,8 +42,7 @@ public class MainActivity extends AppCompatActivity {
                     if (player.isPlaying()) {
                         pause();
                     } else if (!player.isPlaying()) {
-                        Song song = songs.get(0);
-                        play(song);
+                        play();
                     }
                     break;
                 }
@@ -52,10 +50,19 @@ public class MainActivity extends AppCompatActivity {
                     stop();
                     break;
                 }
+                case R.id.next_button: {
+                    next();
+                    break;
+                }
+                case R.id.prev_button: {
+                    prev();
+                    break;
+                }
             }
 
         }
     };
+    private ArrayList<Song> songs = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,11 +73,15 @@ public class MainActivity extends AppCompatActivity {
         songTitle = findViewById(R.id.song_title);
         recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setHasFixedSize(true);
-        playerView = findViewById(R.id.player_view);
         playButton = findViewById(R.id.play_button);
-        stopButton = findViewById(R.id.stop_button);
+        ImageButton stopButton = findViewById(R.id.stop_button);
+        ImageButton nextButton = findViewById(R.id.next_button);
+        ImageButton prevButton = findViewById(R.id.prev_button);
+        View bottomSheet = findViewById(R.id.bottom_sheet);
 
-        layoutManager = new LinearLayoutManager(getApplicationContext());
+        player = new Player(songs);
+
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(layoutManager);
 
         songAdapter = new SongAdapter(songs);
@@ -78,13 +89,13 @@ public class MainActivity extends AppCompatActivity {
 
         playButton.setOnClickListener(onClickListener);
         stopButton.setOnClickListener(onClickListener);
+        nextButton.setOnClickListener(onClickListener);
+        prevButton.setOnClickListener(onClickListener);
 
         recyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), recyclerView, new RecyclerTouchListener.ClickListener() {
             @Override
             public void onClick(View view, int position) {
-                Song song = songs.get(position);
-                player.setCurrentSong(null);
-                play(song);
+                startPlay(position);
             }
 
             @Override
@@ -96,11 +107,33 @@ public class MainActivity extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
         } else {
-            status.setText("PERMISSION ALREADY GRANTED");
+            status.setText(getResources().getString(R.string.already_granted));
             getSongList(getApplicationContext());
             status.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
         }
+
+        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
+
+//        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+//        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+        bottomSheetBehavior.setPeekHeight(bottomSheetBehavior.getPeekHeight());
+        bottomSheetBehavior.setHideable(true);
+        bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+            @Override
+            public void onStateChanged(@NonNull View bottomSheet, int newState) {
+                if (newState == BottomSheetBehavior.STATE_HIDDEN) {
+                    stop();
+                }
+            }
+
+            @Override
+            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+
+            }
+        });
     }
 
     public void getSongList(Context context) {
@@ -129,52 +162,64 @@ public class MainActivity extends AppCompatActivity {
             } while (musicCursor.moveToNext());
 
             songAdapter.update();
+            musicCursor.close();
             //get JSON data
         }
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
             case 1: {
                 Log.d("PERMISSION", "" + grantResults.length);
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    status.setText("PERMISSION GRANTED");
+                    status.setText(getResources().getString(R.string.granted));
                     getSongList(getApplicationContext());
                     status.setVisibility(View.GONE);
                     recyclerView.setVisibility(View.VISIBLE);
                 } else {
-                    status.setText("PERMISSION DENIED");
+                    status.setText(getResources().getString(R.string.denied));
                 }
-                return;
+                break;
             }
         }
     }
 
-    void play(Song song) {
-        Song currentSong = song;
-        if(player.getCurrentSong() != null){
-            currentSong = player.getCurrentSong();
-        }
-        songTitle.setText(currentSong.getTitle());
-        Log.d("SONG TITLE", currentSong.getTitle());
-        player.play(currentSong);
-        playerView.setVisibility(View.VISIBLE);
+    void startPlay(int position) {
+        player.startPlay(position);
+        songTitle.setText(player.getCurrentSong().getTitle());
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         playButton.setImageResource(R.drawable.ic_pause);
-        stopButton.setVisibility(View.VISIBLE);
+    }
+
+    void play() {
+        player.play();
+        songTitle.setText(player.getCurrentSong().getTitle());
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        playButton.setImageResource(R.drawable.ic_pause);
     }
 
     void pause() {
         player.pause();
         playButton.setImageResource(R.drawable.ic_play);
-        stopButton.setVisibility(View.GONE);
     }
 
     void stop() {
         player.stop();
-        playerView.setVisibility(View.GONE);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         playButton.setImageResource(R.drawable.ic_play);
-        stopButton.setVisibility(View.GONE);
+    }
+
+    void next() {
+        player.next();
+        songTitle.setText(player.getCurrentSong().getTitle());
+        playButton.setImageResource(R.drawable.ic_pause);
+    }
+
+    void prev() {
+        player.prev();
+        songTitle.setText(player.getCurrentSong().getTitle());
+        playButton.setImageResource(R.drawable.ic_pause);
     }
 
 }

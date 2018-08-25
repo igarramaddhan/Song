@@ -1,23 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/song_view"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="?android:selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
     android:orientation="vertical"
-    android:paddingHorizontal="16dp"
-    android:paddingVertical="16dp">
+    android:padding="16dp">
 
     <TextView
-        android:textColor="#000"
         android:id="@+id/card_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="16dp"
-        android:textStyle="bold"
-        android:layout_alignParentTop="true"/>
-    <TextView
+        android:layout_alignParentTop="true"
         android:textColor="#000"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_toStartOf="@+id/card_duration"/>
+
+    <TextView
         android:id="@+id/card_artist"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-</LinearLayout>
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/card_title"
+        android:textColor="#000" />
+
+    <TextView
+        android:id="@+id/card_duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:textColor="#000"
+        android:layout_centerVertical="true"/>
+
+</RelativeLayout>

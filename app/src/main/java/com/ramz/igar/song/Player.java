@@ -4,57 +4,86 @@ import android.media.MediaPlayer;
 import android.util.Log;
 
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.List;
 
-public class Player  {
+public class Player {
 
     private boolean isPlaying = false;
     private Song currentSong = null;
     private MediaPlayer player = new MediaPlayer();
+    private List<Song> playlist;
+    private int currentIndex = 0;
 
-    public void play(Song file){
+    Player(List<Song> playlist) {
+        this.playlist = playlist;
+    }
+
+    public void startPlay(int position) {
         try {
-            if(currentSong == null) {
-                stop();
-                currentSong = file;
-                player.setDataSource(file.getPath());
-                player.prepare();
-                player.start();
-            }else{
-                player.start();
+            if (currentSong != null) {
+                player.stop();
+                player.reset();
+                currentSong = null;
             }
-        }catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (IllegalStateException e) {
-            e.printStackTrace();
+            Song current = playlist.get(position);
+            currentIndex = position;
+            currentSong = current;
+            player.setDataSource(current.getPath());
+            player.prepare();
+            player.start();
+            isPlaying = true;
+            Log.d("PLAYER", "START PLAYING: " + currentSong.getTitle());
         } catch (IOException e) {
+            Log.e("ERROR", "ERROR ON START PLAY");
+            e.printStackTrace();
+        }
+    }
+
+
+    public void play() {
+        try {
+            player.start();
+        } catch (IllegalArgumentException e) {
+            Log.e("ERROR", "ERROR ON PLAY");
             e.printStackTrace();
         }
         isPlaying = true;
         Log.d("PLAYER", "PLAY");
     }
 
-    public void pause(){
+    public void pause() {
         player.pause();
         isPlaying = false;
         Log.d("PLAYER", "PAUSE");
     }
 
-    public void stop(){
-        player.stop();
-        player.reset();
-        currentSong = null;
-        isPlaying = false;
+    public void stop() {
+        if(isPlaying) {
+            player.stop();
+            player.reset();
+            currentSong = null;
+            isPlaying = false;
+        }
     }
 
-    public void setCurrentSong(Song song){
-        this.currentSong = song;
+    public void next(){
+        stop();
+        startPlay(currentIndex + 1 == playlist.size() ? 0 : currentIndex + 1);
+        Log.d("PLAYER", "NEXT");
+    }
+
+    public void prev(){
+        stop();
+        startPlay(currentIndex - 1 == -1 ? playlist.size() - 1 : currentIndex - 1);
+        Log.d("PLAYER", "PREV");
     }
 
     public Song getCurrentSong() {
         return currentSong;
     }
 
-    public boolean isPlaying(){
+    public boolean isPlaying() {
         return isPlaying;
     }
 

@@ -17,7 +17,7 @@ public class Song{
     private long songDuration;
     private String path;
 
-    public Song(long id, String title, String artist, String album, long songDuration, String path) {
+    Song(long id, String title, String artist, String album, long songDuration, String path) {
         this.id = id;
         this.title = title;
         this.artist = artist;
@@ -57,7 +57,7 @@ public class Song{
 
     private String milliSecondsToTimer(long milliseconds) {
         String finalTimerString = "";
-        String secondsString = "";
+        String secondsString;
 
         // Convert total duration into time
         int hours = (int) (milliseconds / (1000 * 60 * 60));
