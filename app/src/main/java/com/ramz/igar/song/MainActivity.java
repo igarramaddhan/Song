@@ -88,8 +88,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView parent, View view, int position, long id) {
                 Intent intent = new Intent(getApplicationContext(), AlbumActivity.class);
-                ArrayList<String> temp = new ArrayList<>(albums.keySet());
-                intent.putExtra("albumTitle", temp.get(position));
+                ArrayList<String> tempTitle = new ArrayList<>(albums.keySet());
+                ArrayList<Album> tempAlbums = new ArrayList<>(albums.values());
+                intent.putExtra("albumTitle", tempTitle.get(position));
+                intent.putExtra("albumArt", tempAlbums.get(position).getAlbumCover());
+                Log.d("TITLE", tempTitle.get(position));
                 startActivityForResult(intent, 1);
             }
         });

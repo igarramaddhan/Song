@@ -1,14 +1,21 @@
 package com.ramz.igar.song;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,8 +69,22 @@ public class AlbumActivity extends AppCompatActivity {
         ImageButton nextButton = findViewById(R.id.next_button);
         ImageButton prevButton = findViewById(R.id.prev_button);
         View bottomSheet = findViewById(R.id.bottom_sheet);
+        ImageView imageView = findViewById(R.id.expandedImage);
+        CollapsingToolbarLayout collapsingToolbarLayout = findViewById(R.id.collapsing_toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+        }
 
-        String albumTitle= getIntent().getStringExtra("albumTitle");
+        String albumTitle = getIntent().getStringExtra("albumTitle");
+        String albumArt = getIntent().getStringExtra("albumArt");
+        collapsingToolbarLayout.setTitle(albumTitle);
+        collapsingToolbarLayout.setCollapsedTitleTextColor(ContextCompat.getColor(getApplicationContext(),android.R.color.white));
+        collapsingToolbarLayout.setExpandedTitleColor(ContextCompat.getColor(getApplicationContext(), android.R.color.transparent));
+        Bitmap coverBitmap = BitmapFactory.decodeFile(albumArt);
+        imageView.setImageBitmap(coverBitmap);
         List<Song> playlist = GlobalStateClass.getInstance().getAlbumSongs(albumTitle);
         GlobalStateClass.getInstance().setPlaylist(playlist);
         player = GlobalStateClass.getInstance().getPlayer();
@@ -94,7 +115,7 @@ public class AlbumActivity extends AppCompatActivity {
         boolean isPlaying = player.isPlaying();
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
         bottomSheetBehavior.setState(isPlaying ? BottomSheetBehavior.STATE_COLLAPSED : BottomSheetBehavior.STATE_HIDDEN);
-        if(isPlaying){
+        if (isPlaying) {
             songTitle.setText(player.getCurrentSong().getTitle());
         }
 
@@ -151,6 +172,12 @@ public class AlbumActivity extends AppCompatActivity {
         player.prev();
         songTitle.setText(player.getCurrentSong().getTitle());
         playButton.setImageResource(R.drawable.ic_pause);
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
     }
 
 }
