@@ -55,13 +55,13 @@ public class AlbumAdapter extends BaseAdapter {
 
 
         final ImageView imageView = convertView.findViewById(R.id.cover_art);
-        final TextView nameTextView =convertView.findViewById(R.id.album_title);
-        final TextView authorTextView = convertView.findViewById(R.id.album_artist);
+        final TextView titleTextView =convertView.findViewById(R.id.album_title);
+        final TextView artistTextView = convertView.findViewById(R.id.album_artist);
 
         // 4
         imageView.setImageBitmap(coverBitmap);
-        nameTextView.setText(album.getAlbumTitle());
-        authorTextView.setText(album.getAlbumTitle());
+        titleTextView.setText(album.getAlbumTitle());
+        artistTextView.setText(album.getArtist());
 
         return convertView;
     }

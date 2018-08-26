@@ -172,8 +172,9 @@ public class MainActivity extends AppCompatActivity {
             for (Song song : songs) {
                 String key = song.getAlbum();
                 String albumCover = song.getAlbumArt();
+                String artist = song.getArtist();
                 if (!albums.containsKey(key)) {
-                    albums.put(key, new Album(key, albumCover));
+                    albums.put(key, new Album(key, albumCover,artist));
                     Album album = albums.get(key);
                     album.addSong(song);
                 } else {
