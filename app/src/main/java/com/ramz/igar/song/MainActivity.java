@@ -1,37 +1,38 @@
 package com.ramz.igar.song;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.GridView;
 import android.widget.ImageButton;
-import android.widget.ListView;
 import android.widget.TextView;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     BottomSheetBehavior bottomSheetBehavior;
     private TextView status, songTitle;
-    private RecyclerView recyclerView;
-    private SongAdapter songAdapter;
+    private GridView gridView;
+    private AlbumAdapter albumAdapter;
     private Player player;
     private ImageButton playButton;
     View.OnClickListener onClickListener = new View.OnClickListener() {
@@ -62,7 +63,8 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
-    private ArrayList<Song> songs = new ArrayList<>();
+    private ArrayList<Song> playlist = GlobalStateClass.getInstance().getPlaylist();
+    private HashMap<String, Album> albums = GlobalStateClass.getInstance().getAlbums();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,38 +73,32 @@ public class MainActivity extends AppCompatActivity {
 
         status = findViewById(R.id.status);
         songTitle = findViewById(R.id.song_title);
-        recyclerView = findViewById(R.id.recycler_view);
-        recyclerView.setHasFixedSize(true);
+        gridView = findViewById(R.id.grid_view);
         playButton = findViewById(R.id.play_button);
         ImageButton stopButton = findViewById(R.id.stop_button);
         ImageButton nextButton = findViewById(R.id.next_button);
         ImageButton prevButton = findViewById(R.id.prev_button);
         View bottomSheet = findViewById(R.id.bottom_sheet);
 
-        player = new Player(songs);
+        player = GlobalStateClass.getInstance().getPlayer();
 
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
-        recyclerView.setLayoutManager(layoutManager);
+        albumAdapter = new AlbumAdapter(getApplicationContext(), albums);
+        gridView.setAdapter(albumAdapter);
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView parent, View view, int position, long id) {
+                Intent intent = new Intent(getApplicationContext(), AlbumActivity.class);
+                ArrayList<String> temp = new ArrayList<>(albums.keySet());
+                intent.putExtra("albumTitle", temp.get(position));
+                startActivityForResult(intent, 1);
+            }
+        });
 
-        songAdapter = new SongAdapter(songs);
-        recyclerView.setAdapter(songAdapter);
 
         playButton.setOnClickListener(onClickListener);
         stopButton.setOnClickListener(onClickListener);
         nextButton.setOnClickListener(onClickListener);
         prevButton.setOnClickListener(onClickListener);
-
-        recyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), recyclerView, new RecyclerTouchListener.ClickListener() {
-            @Override
-            public void onClick(View view, int position) {
-                startPlay(position);
-            }
-
-            @Override
-            public void onLongClick(View view, int position) {
-
-            }
-        }));
 
         if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
@@ -110,13 +106,11 @@ public class MainActivity extends AppCompatActivity {
             status.setText(getResources().getString(R.string.already_granted));
             getSongList(getApplicationContext());
             status.setVisibility(View.GONE);
-            recyclerView.setVisibility(View.VISIBLE);
+            gridView.setVisibility(View.VISIBLE);
         }
 
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
 
-//        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-//        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
         bottomSheetBehavior.setPeekHeight(bottomSheetBehavior.getPeekHeight());
@@ -150,6 +144,7 @@ public class MainActivity extends AppCompatActivity {
             int durationColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
             int pathColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.DATA);
 
+            ArrayList<Song> songs = new ArrayList<>();
             //add songs to list
             do {
                 long thisId = musicCursor.getLong(idColumn);
@@ -158,12 +153,38 @@ public class MainActivity extends AppCompatActivity {
                 String thisAlbum = musicCursor.getString(albumColumn);
                 long thisDuration = musicCursor.getLong(durationColumn);
                 String thisPath = musicCursor.getString(pathColumn);
-                songs.add(new Song(thisId, thisTitle, thisArtist, thisAlbum, thisDuration, thisPath));
+
+                String albumArt = "";
+                Cursor cursor = getContentResolver().query(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
+                        new String[]{MediaStore.Audio.Albums._ID, MediaStore.Audio.Albums.ALBUM_ART},
+                        MediaStore.Audio.Albums._ID + "=?",
+                        new String[]{String.valueOf(thisId)},
+                        null);
+
+                if (cursor.moveToFirst()) {
+                    albumArt = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART));
+                }
+
+                songs.add(new Song(thisId, thisTitle, thisArtist, thisAlbum, thisDuration, thisPath, albumArt));
+                cursor.close();
             } while (musicCursor.moveToNext());
 
-            songAdapter.update();
+            for (Song song : songs) {
+                String key = song.getAlbum();
+                String albumCover = song.getAlbumArt();
+                if (!albums.containsKey(key)) {
+                    albums.put(key, new Album(key, albumCover));
+                    Album album = albums.get(key);
+                    album.addSong(song);
+                } else {
+                    Album album = albums.get(key);
+                    album.addSong(song);
+                }
+            }
+
+
+            albumAdapter.update(albums);
             musicCursor.close();
-            //get JSON data
         }
     }
 
@@ -176,12 +197,22 @@ public class MainActivity extends AppCompatActivity {
                     status.setText(getResources().getString(R.string.granted));
                     getSongList(getApplicationContext());
                     status.setVisibility(View.GONE);
-                    recyclerView.setVisibility(View.VISIBLE);
+                    gridView.setVisibility(View.VISIBLE);
                 } else {
                     status.setText(getResources().getString(R.string.denied));
                 }
                 break;
             }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        boolean isPlaying = player.isPlaying();
+        bottomSheetBehavior.setState(isPlaying ? BottomSheetBehavior.STATE_COLLAPSED : BottomSheetBehavior.STATE_HIDDEN);
+        if(isPlaying){
+            playButton.setImageResource(R.drawable.ic_pause);
+            songTitle.setText(player.getCurrentSong().getTitle());
         }
     }
 

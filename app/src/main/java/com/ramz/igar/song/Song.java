@@ -17,12 +17,12 @@ public class Song{
     private long songDuration;
     private String path;
 
-    Song(long id, String title, String artist, String album, long songDuration, String path) {
+    Song(long id, String title, String artist, String album, long songDuration, String path, String art) {
         this.id = id;
         this.title = title;
         this.artist = artist;
         this.album = album;
-        this.albumArt = ContentUris.withAppendedId(Uri.parse("content://media/external/audio/albumart"), this.id).toString();
+        this.albumArt = art;
         this.songDuration = songDuration;
         this.path = path;
     }
