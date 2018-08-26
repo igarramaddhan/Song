@@ -7,12 +7,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -71,6 +73,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        getWindow().setAllowEnterTransitionOverlap(false);
+        getWindow().setAllowReturnTransitionOverlap(false);
+
         status = findViewById(R.id.status);
         songTitle = findViewById(R.id.song_title);
         gridView = findViewById(R.id.grid_view);
@@ -81,6 +86,12 @@ public class MainActivity extends AppCompatActivity {
         View bottomSheet = findViewById(R.id.bottom_sheet);
 
         player = GlobalStateClass.getInstance().getPlayer();
+        player.getPlayer().setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                next();
+            }
+        });
 
         albumAdapter = new AlbumAdapter(getApplicationContext(), albums);
         gridView.setAdapter(albumAdapter);
@@ -93,7 +104,9 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("albumTitle", tempTitle.get(position));
                 intent.putExtra("albumArt", tempAlbums.get(position).getAlbumCover());
                 Log.d("TITLE", tempTitle.get(position));
-                startActivityForResult(intent, 1);
+                View albumView = albumAdapter.getView(position, view, parent);
+                ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(MainActivity.this, albumView.findViewById(R.id.cover_art), "albumArt");
+                startActivity(intent, options.toBundle());
             }
         });
 
@@ -220,6 +233,17 @@ public class MainActivity extends AppCompatActivity {
             playButton.setImageResource(R.drawable.ic_pause);
             songTitle.setText(player.getCurrentSong().getTitle());
         }
+    }
+
+    @Override
+    protected void onPostResume() {
+        boolean isPlaying = player.isPlaying();
+        bottomSheetBehavior.setState(isPlaying ? BottomSheetBehavior.STATE_COLLAPSED : BottomSheetBehavior.STATE_HIDDEN);
+        if (isPlaying) {
+            playButton.setImageResource(R.drawable.ic_pause);
+            songTitle.setText(player.getCurrentSong().getTitle());
+        }
+        super.onPostResume();
     }
 
     void startPlay(int position) {

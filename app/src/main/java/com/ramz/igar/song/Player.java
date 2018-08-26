@@ -87,4 +87,7 @@ public class Player {
         return isPlaying;
     }
 
+    public MediaPlayer getPlayer() {
+        return player;
+    }
 }

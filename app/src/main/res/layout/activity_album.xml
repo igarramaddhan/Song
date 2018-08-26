@@ -30,6 +30,7 @@
 
 
                 <ImageView
+                    android:transitionName="albumArt"
                     android:id="@+id/expandedImage"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -40,7 +41,7 @@
 
                 <View
                     android:layout_width="match_parent"
-                    android:layout_height="100dp"
+                    android:layout_height="150dp"
                     android:layout_gravity="top"
                     android:background="@drawable/gradient"
                     android:fitsSystemWindows="true" />
