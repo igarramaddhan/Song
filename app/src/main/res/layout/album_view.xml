@@ -14,7 +14,7 @@
         android:foreground="?android:attr/selectableItemBackground"
         android:gravity="center"
         android:orientation="vertical"
-        android:elevation="5dp">
+        android:elevation="3dp">
 
         <FrameLayout
             android:layout_width="wrap_content"

@@ -104,7 +104,8 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
         } else {
             status.setText(getResources().getString(R.string.already_granted));
-            getSongList(getApplicationContext());
+            if (GlobalStateClass.getInstance().getAlbums().isEmpty())
+                getSongList(getApplicationContext());
             status.setVisibility(View.GONE);
             gridView.setVisibility(View.VISIBLE);
         }
@@ -174,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
                 String albumCover = song.getAlbumArt();
                 String artist = song.getArtist();
                 if (!albums.containsKey(key)) {
-                    albums.put(key, new Album(key, albumCover,artist));
+                    albums.put(key, new Album(key, albumCover, artist));
                     Album album = albums.get(key);
                     album.addSong(song);
                 } else {
@@ -196,7 +197,8 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("PERMISSION", "" + grantResults.length);
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     status.setText(getResources().getString(R.string.granted));
-                    getSongList(getApplicationContext());
+                    if (GlobalStateClass.getInstance().getAlbums().isEmpty())
+                        getSongList(getApplicationContext());
                     status.setVisibility(View.GONE);
                     gridView.setVisibility(View.VISIBLE);
                 } else {
@@ -211,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         boolean isPlaying = player.isPlaying();
         bottomSheetBehavior.setState(isPlaying ? BottomSheetBehavior.STATE_COLLAPSED : BottomSheetBehavior.STATE_HIDDEN);
-        if(isPlaying){
+        if (isPlaying) {
             playButton.setImageResource(R.drawable.ic_pause);
             songTitle.setText(player.getCurrentSong().getTitle());
         }
