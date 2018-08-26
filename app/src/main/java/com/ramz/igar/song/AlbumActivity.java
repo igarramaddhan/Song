@@ -12,6 +12,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -81,7 +82,7 @@ public class AlbumActivity extends AppCompatActivity {
         String albumTitle = getIntent().getStringExtra("albumTitle");
         String albumArt = getIntent().getStringExtra("albumArt");
         collapsingToolbarLayout.setTitle(albumTitle);
-        collapsingToolbarLayout.setCollapsedTitleTextColor(ContextCompat.getColor(getApplicationContext(),android.R.color.white));
+        collapsingToolbarLayout.setCollapsedTitleTextColor(ContextCompat.getColor(getApplicationContext(), android.R.color.white));
         collapsingToolbarLayout.setExpandedTitleColor(ContextCompat.getColor(getApplicationContext(), android.R.color.transparent));
         Bitmap coverBitmap = BitmapFactory.decodeFile(albumArt);
         imageView.setImageBitmap(coverBitmap);
@@ -89,6 +90,7 @@ public class AlbumActivity extends AppCompatActivity {
         GlobalStateClass.getInstance().setPlaylist(playlist);
         player = GlobalStateClass.getInstance().getPlayer();
         playButton.setImageResource(R.drawable.ic_pause);
+        final View root = findViewById(R.id.root);
 
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(layoutManager);
@@ -126,6 +128,10 @@ public class AlbumActivity extends AppCompatActivity {
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
                 if (newState == BottomSheetBehavior.STATE_HIDDEN) {
                     stop();
+                } else if (newState == BottomSheetBehavior.STATE_EXPANDED) {
+                    root.setFitsSystemWindows(false);
+                } else if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
+                    root.setFitsSystemWindows(true);
                 }
             }
 

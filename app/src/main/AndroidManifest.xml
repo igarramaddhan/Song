@@ -19,7 +19,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".SongDetail" />
-        <activity android:name=".AlbumActivity"/>
+        <activity android:name=".AlbumActivity" android:theme="@style/AppTheme.TransparentTheme"/>
     </application>
 
 </manifest>
